@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="DocumentFlowKafka.csproj" />
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
+  <Project Path="DocumentFlowKafka/DocumentFlowKafka.csproj" />
 </Solution>
