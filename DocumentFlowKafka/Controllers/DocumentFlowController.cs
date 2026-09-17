@@ -1,8 +1,10 @@
 ﻿using DocumentFlowKafka.Model;
+using DocumentFlowKafka.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection.Metadata;
+using System.Xml.Linq;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -14,9 +16,12 @@ namespace DocumentFlowKafka.Controllers
     public class DocumentFlowController : ControllerBase
     {
         private DocumentFlowContext _context;
-        public DocumentFlowController(DocumentFlowContext _context)
+        private KafkaProducerService _kafka;
+
+        public DocumentFlowController(DocumentFlowContext _context, KafkaProducerService _kafka)
         {
             this._context = _context;
+            this._kafka = _kafka;
         }
         /// <summary>
         /// Получить список документооборотов
@@ -56,6 +61,16 @@ namespace DocumentFlowKafka.Controllers
         {
             _context.Flows.Add(flow);
             await _context.SaveChangesAsync();
+
+            await _kafka.SendAsync("flow-created", new
+            {
+                Id = flow.Id,
+                Name = flow.Name,
+                FlowId = flow.Id,
+                CreatedAt = flow.DateCreate,
+                UserId = User.FindFirst(JwtRegisteredClaimNames.Sub).Value
+            });
+
             return Ok();
         }
 

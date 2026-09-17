@@ -1,5 +1,6 @@
 using Confluent.Kafka;
 using DocumentFlowKafka.Model;
+using DocumentFlowKafka.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -25,6 +26,9 @@ builder.Services.AddSingleton<IProducer<Null, string>>(sp =>
     };
     return new ProducerBuilder<Null, string>(config).Build();
 });
+
+builder.Services.AddSingleton<KafkaProducerService>();
+builder.Services.AddHostedService<KafkaConsumerService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
