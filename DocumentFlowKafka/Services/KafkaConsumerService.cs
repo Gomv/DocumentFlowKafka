@@ -31,7 +31,7 @@ namespace DocumentFlowKafka.Services
             };
 
             using var consumer = new ConsumerBuilder<Null, string>(config).Build();
-            consumer.Subscribe("document-created");
+            consumer.Subscribe("flow-created");
 
             _logger.LogInformation("Kafka Consumer запущен");
 
@@ -60,6 +60,11 @@ namespace DocumentFlowKafka.Services
             consumer.Close();
         }
 
+        /// <summary>
+        /// Тут формируется файл документооборота и записывается в базу
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
         private async Task ProcessMessageAsync(string json)
         {
             using var scope = _serviceProvider.CreateScope();
