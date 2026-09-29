@@ -5,10 +5,10 @@ namespace DocumentFlowKafka.Services
 {
     public class KafkaProducerService
     {
-        private readonly IProducer<Null, string> _producer;
+        private readonly IProducer<string, string> _producer;
         private readonly ILogger<KafkaProducerService> _logger;
 
-        public KafkaProducerService(IProducer<Null, string> producer, ILogger<KafkaProducerService> logger)
+        public KafkaProducerService(IProducer<string, string> producer, ILogger<KafkaProducerService> logger)
         {
             _producer = producer;
             _logger = logger;
@@ -19,8 +19,9 @@ namespace DocumentFlowKafka.Services
             try
             {
                 var json = JsonSerializer.Serialize(message);
-                var result = await _producer.ProduceAsync(topic, new Message<Null, string>
+                var result = await _producer.ProduceAsync(topic, new Message<string, string>
                 {
+                    Key = message.GetType().GetProperty("Id").GetValue(message).ToString() ?? "", //Для поиска сообщений в куче сообщений  у Кафки
                     Value = json
                 });
 

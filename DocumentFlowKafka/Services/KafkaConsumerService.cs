@@ -70,6 +70,10 @@ namespace DocumentFlowKafka.Services
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<DocumentFlowContext>();
 
+            /*
+             Через switch ловить топики, но как то странно, что просто тут будет перечень топиков которые кафке нужно отрабатывать
+             */
+
             var data = JsonSerializer.Deserialize<JsonElement>(json);
             _logger.LogInformation($"Обработка документа: {data.GetProperty("Id")}");
 
