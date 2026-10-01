@@ -29,5 +29,10 @@ namespace DocumentFlowKafka.Model
 
         [Column("DateCreate")]
         public DateTime? DateCreate { get; set; }
+
+        [Column("FlowsType")]
+        [Required]
+        [ForeignKey(nameof(FlowsTypes))]
+        public FlowsTypes FlowsType { get; set; }
     }
 }

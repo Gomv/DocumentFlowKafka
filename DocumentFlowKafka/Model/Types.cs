@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace DocumentFlowKafka.Model
 {
     [Table("Type")]
-    public class Type
+    public class Types
     {
         [Key]
         [Column("Id")]
@@ -14,6 +14,10 @@ namespace DocumentFlowKafka.Model
         [Column("Name")]
         [Required]
         [MaxLength(100)]
-        public string Name { get; set; }
+        public string Name { get; set; } = "ТипДокументаНеНайден";
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }
