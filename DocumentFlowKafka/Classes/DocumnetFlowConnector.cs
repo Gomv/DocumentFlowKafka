@@ -3,6 +3,9 @@ using System.Text.Json;
 
 namespace DocumentFlowKafka.Classes
 {
+    /// <summary>
+    /// Документооборот с которым работаем
+    /// </summary>
     public class DocumnetFlowConnector
     {
         /// <summary>
@@ -36,25 +39,23 @@ namespace DocumentFlowKafka.Classes
         {
             Flows flow = null;
 
-            //Простой путь
-            if (Documnet.Type.ToString() != "ТипДокументаНеНайден")
+            try // пытаемся получить 
             {
-                try // пытаемся получить 
-                {
-                    flow = _context.Flows.Single(s => s.Id == Documnet.FlowId.Id);
-                }
-                catch // если документооборот новый, ищем первый документ в ценпочки документооборота через тип
+                flow = _context.Flows.Single(s => s.Id == Documnet.FlowId.Id);
+            }
+            catch // если документооборот новый, ищем первый документ в ценпочки документооборота через тип
+            {
+                try
                 {
                     flow = _context.Flows.Single(s => s.FlowsType.DocumnetTypeId.IndexOf(Documnet.Type) == 0);
                 }
+                catch //Если не нашли
+                {
+                    return null;
+                }
+            }
 
-                return flow.FlowsType;
-            }
-            //Сложный путь
-            else //тут сервис будет пытаться угадать какой документооборот вернуть пользователю
-            {
-                return null;
-            }
+            return flow.FlowsType;
         }
     }
 }
