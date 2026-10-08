@@ -2,32 +2,31 @@
 
 namespace DocumentFlowKafka.Classes.Documnets
 {
-    public class NotFormalDocumnet : DocumentsClass
+    /// <summary>
+    /// Приглашение (ПР) для установления/разрыва связи.
+    /// </summary>
+    public class PrDocument : DocumentsClass
     {
-        public string DocName { get; init; }
-        public DateTime DocDate { get; init; }
+        public string PrType { get; init; } // "Запрос" | "Разрыв"
 
-        public NotFormalDocumnet(string sender, string receiver, string documentId, string docName, DateTime docDate, string content = "")
+        public PrDocument(string sender, string receiver, string documentId, string prType, string content = "")
         {
             Sender = sender;
             Receiver = receiver;
             DocumentId = documentId;
-            DocName = docName;
-            DocDate = docDate;
-            DocType = DocumentType.Неформализованный;
-            Type = new Types { Name = "Неформализованный" };
-            Name = "Неформализованный документ";
+            PrType = prType;
+            DocType = DocumentType.ПР;
+            Type = new Types { Name = $"ПР ({prType})" };
+            Name = $"Приглашение ({prType})";
 
             HeaderLogick = GenerationHeaderLogick();
             BodyLogick = GenerationBodyLogick(content);
         }
 
         protected override string GenerationHeaderLogick() => $"""
-        <xs:Неформализованный xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-                              Ид="{DocumentId}" Название="{DocName}" Дата="{DocDate:yyyy-MM-dd}">
+        <xs:ПР xmlns:xs="http://www.w3.org/2001/XMLSchema" Тип="{PrType}" Ид="{DocumentId}">
           <xs:Заголовок>
-            <xs:НазваниеДокумента>{DocName}</xs:НазваниеДокумента>
-            <xs:ДатаДокумента>{DocDate:yyyy-MM-dd}</xs:ДатаДокумента>
+            <xs:ТипПриглашения>{PrType}</xs:ТипПриглашения>
             <xs:Отправитель>{Sender}</xs:Отправитель>
             <xs:Получатель>{Receiver}</xs:Получатель>
         """;
@@ -37,13 +36,13 @@ namespace DocumentFlowKafka.Classes.Documnets
           <xs:Содержимое>
             {content}
           </xs:Содержимое>
-        </xs:Неформализованный>
+        </xs:ПР>
         """;
 
         public override string GenerationHeaderDescription() => $"""
-        <ОписаниеДокумента Тип="Неформализованный" Ид="{DocumentId}">
+        <ОписаниеДокумента Тип="ПР" ПодТип="{PrType}" Ид="{DocumentId}">
           <Заголовок>
-            <Описание>Неформализованный документ "{DocName}" от {DocDate:dd.MM.yyyy}</Описание>
+            <Описание>Приглашение ({PrType})</Описание>
             <Отправитель>{Sender}</Отправитель>
             <Получатель>{Receiver}</Получатель>
         """;
@@ -57,9 +56,9 @@ namespace DocumentFlowKafka.Classes.Documnets
         """;
 
         public override string GenerationHeaderReceipt() => $"""
-        <Квитанция Тип="Неформализованный" Ид="{DocumentId}">
+        <Квитанция Тип="ПР" ПодТип="{PrType}" Ид="{DocumentId}">
           <Заголовок>
-            <Информация>Квитанция для неформализованного документа "{DocName}"</Информация>
+            <Информация>Квитанция для приглашения ({PrType})</Информация>
             <ДатаФормирования>{DateTime.Now:dd.MM.yyyy HH:mm:ss}</ДатаФормирования>
         """;
 

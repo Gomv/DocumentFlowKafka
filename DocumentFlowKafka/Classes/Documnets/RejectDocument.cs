@@ -2,32 +2,37 @@
 
 namespace DocumentFlowKafka.Classes.Documnets
 {
-    public class NotFormalDocumnet : DocumentsClass
+    /// <summary>
+    /// Отказ в подписи.
+    /// </summary>
+    public class RejectDocument : DocumentsClass
     {
-        public string DocName { get; init; }
-        public DateTime DocDate { get; init; }
+        public string TargetDocumentId { get; init; }
+        public string Reason { get; init; }
+        public DateTime RejectDate { get; init; }
 
-        public NotFormalDocumnet(string sender, string receiver, string documentId, string docName, DateTime docDate, string content = "")
+        public RejectDocument(string sender, string receiver, string documentId, string targetDocumentId, string reason, DateTime rejectDate, string content = "")
         {
             Sender = sender;
             Receiver = receiver;
             DocumentId = documentId;
-            DocName = docName;
-            DocDate = docDate;
-            DocType = DocumentType.Неформализованный;
-            Type = new Types { Name = "Неформализованный" };
-            Name = "Неформализованный документ";
+            TargetDocumentId = targetDocumentId;
+            Reason = reason;
+            RejectDate = rejectDate;
+            DocType = DocumentType.ОтказПодписи;
+            Type = new Types { Name = "Отказ" };
+            Name = "Отказ в подписи";
 
             HeaderLogick = GenerationHeaderLogick();
             BodyLogick = GenerationBodyLogick(content);
         }
 
         protected override string GenerationHeaderLogick() => $"""
-        <xs:Неформализованный xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-                              Ид="{DocumentId}" Название="{DocName}" Дата="{DocDate:yyyy-MM-dd}">
+        <xs:Отказ xmlns:xs="http://www.w3.org/2001/XMLSchema" Ид="{DocumentId}" ЦелевойИд="{TargetDocumentId}" Дата="{RejectDate:yyyy-MM-dd}">
           <xs:Заголовок>
-            <xs:НазваниеДокумента>{DocName}</xs:НазваниеДокумента>
-            <xs:ДатаДокумента>{DocDate:yyyy-MM-dd}</xs:ДатаДокумента>
+            <xs:ЦелевойДокументИд>{TargetDocumentId}</xs:ЦелевойДокументИд>
+            <xs:Причина>{Reason}</xs:Причина>
+            <xs:ДатаОтказа>{RejectDate:yyyy-MM-dd}</xs:ДатаОтказа>
             <xs:Отправитель>{Sender}</xs:Отправитель>
             <xs:Получатель>{Receiver}</xs:Получатель>
         """;
@@ -37,13 +42,13 @@ namespace DocumentFlowKafka.Classes.Documnets
           <xs:Содержимое>
             {content}
           </xs:Содержимое>
-        </xs:Неформализованный>
+        </xs:Отказ>
         """;
 
         public override string GenerationHeaderDescription() => $"""
-        <ОписаниеДокумента Тип="Неформализованный" Ид="{DocumentId}">
+        <ОписаниеДокумента Тип="Отказ" Ид="{DocumentId}">
           <Заголовок>
-            <Описание>Неформализованный документ "{DocName}" от {DocDate:dd.MM.yyyy}</Описание>
+            <Описание>Отказ в подписи для документа № {TargetDocumentId}: {Reason}</Описание>
             <Отправитель>{Sender}</Отправитель>
             <Получатель>{Receiver}</Получатель>
         """;
@@ -57,9 +62,9 @@ namespace DocumentFlowKafka.Classes.Documnets
         """;
 
         public override string GenerationHeaderReceipt() => $"""
-        <Квитанция Тип="Неформализованный" Ид="{DocumentId}">
+        <Квитанция Тип="Отказ" Ид="{DocumentId}">
           <Заголовок>
-            <Информация>Квитанция для неформализованного документа "{DocName}"</Информация>
+            <Информация>Квитанция для отказа в подписи № {DocumentId}</Информация>
             <ДатаФормирования>{DateTime.Now:dd.MM.yyyy HH:mm:ss}</ДатаФормирования>
         """;
 

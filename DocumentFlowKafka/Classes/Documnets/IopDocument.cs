@@ -2,32 +2,34 @@
 
 namespace DocumentFlowKafka.Classes.Documnets
 {
-    public class NotFormalDocumnet : DocumentsClass
+    /// <summary>
+    /// Извещение о получении (ИОП).
+    /// </summary>
+    public class IopDocument : DocumentsClass
     {
-        public string DocName { get; init; }
-        public DateTime DocDate { get; init; }
+        public string TargetDocumentId { get; init; }
+        public DateTime IopDate { get; init; }
 
-        public NotFormalDocumnet(string sender, string receiver, string documentId, string docName, DateTime docDate, string content = "")
+        public IopDocument(string sender, string receiver, string documentId, string targetDocumentId, DateTime iopDate, string content = "")
         {
             Sender = sender;
             Receiver = receiver;
             DocumentId = documentId;
-            DocName = docName;
-            DocDate = docDate;
-            DocType = DocumentType.Неформализованный;
-            Type = new Types { Name = "Неформализованный" };
-            Name = "Неформализованный документ";
+            TargetDocumentId = targetDocumentId;
+            IopDate = iopDate;
+            DocType = DocumentType.ИзвещениеПолучении;
+            Type = new Types { Name = "ИОП" };
+            Name = "Извещение о получении";
 
             HeaderLogick = GenerationHeaderLogick();
             BodyLogick = GenerationBodyLogick(content);
         }
 
         protected override string GenerationHeaderLogick() => $"""
-        <xs:Неформализованный xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-                              Ид="{DocumentId}" Название="{DocName}" Дата="{DocDate:yyyy-MM-dd}">
+        <xs:ИОП xmlns:xs="http://www.w3.org/2001/XMLSchema" Ид="{DocumentId}" ЦелевойИд="{TargetDocumentId}" Дата="{IopDate:yyyy-MM-dd}">
           <xs:Заголовок>
-            <xs:НазваниеДокумента>{DocName}</xs:НазваниеДокумента>
-            <xs:ДатаДокумента>{DocDate:yyyy-MM-dd}</xs:ДатаДокумента>
+            <xs:ЦелевойДокументИд>{TargetDocumentId}</xs:ЦелевойДокументИд>
+            <xs:ДатаИзвещения>{IopDate:yyyy-MM-dd}</xs:ДатаИзвещения>
             <xs:Отправитель>{Sender}</xs:Отправитель>
             <xs:Получатель>{Receiver}</xs:Получатель>
         """;
@@ -37,13 +39,13 @@ namespace DocumentFlowKafka.Classes.Documnets
           <xs:Содержимое>
             {content}
           </xs:Содержимое>
-        </xs:Неформализованный>
+        </xs:ИОП>
         """;
 
         public override string GenerationHeaderDescription() => $"""
-        <ОписаниеДокумента Тип="Неформализованный" Ид="{DocumentId}">
+        <ОписаниеДокумента Тип="ИОП" Ид="{DocumentId}">
           <Заголовок>
-            <Описание>Неформализованный документ "{DocName}" от {DocDate:dd.MM.yyyy}</Описание>
+            <Описание>Извещение о получении для документа № {TargetDocumentId}</Описание>
             <Отправитель>{Sender}</Отправитель>
             <Получатель>{Receiver}</Получатель>
         """;
@@ -57,9 +59,9 @@ namespace DocumentFlowKafka.Classes.Documnets
         """;
 
         public override string GenerationHeaderReceipt() => $"""
-        <Квитанция Тип="Неформализованный" Ид="{DocumentId}">
+        <Квитанция Тип="ИОП" Ид="{DocumentId}">
           <Заголовок>
-            <Информация>Квитанция для неформализованного документа "{DocName}"</Информация>
+            <Информация>Квитанция для ИОП № {DocumentId}</Информация>
             <ДатаФормирования>{DateTime.Now:dd.MM.yyyy HH:mm:ss}</ДатаФормирования>
         """;
 

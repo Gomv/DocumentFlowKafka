@@ -2,32 +2,37 @@
 
 namespace DocumentFlowKafka.Classes.Documnets
 {
-    public class NotFormalDocumnet : DocumentsClass
+    /// <summary>
+    /// Предложение об аннулировании (ПОА).
+    /// </summary>
+    public class PoaDocument : DocumentsClass
     {
-        public string DocName { get; init; }
-        public DateTime DocDate { get; init; }
+        public string TargetDocumentId { get; init; }
+        public string TargetDocumentType { get; init; }
+        public string Reason { get; init; }
 
-        public NotFormalDocumnet(string sender, string receiver, string documentId, string docName, DateTime docDate, string content = "")
+        public PoaDocument(string sender, string receiver, string documentId, string targetDocumentId, string targetDocumentType, string reason, string content = "")
         {
             Sender = sender;
             Receiver = receiver;
             DocumentId = documentId;
-            DocName = docName;
-            DocDate = docDate;
-            DocType = DocumentType.Неформализованный;
-            Type = new Types { Name = "Неформализованный" };
-            Name = "Неформализованный документ";
+            TargetDocumentId = targetDocumentId;
+            TargetDocumentType = targetDocumentType;
+            Reason = reason;
+            DocType = DocumentType.ПредложениеОбАннулировании;
+            Type = new Types { Name = "ПОА" };
+            Name = "Предложение об аннулировании";
 
             HeaderLogick = GenerationHeaderLogick();
             BodyLogick = GenerationBodyLogick(content);
         }
 
         protected override string GenerationHeaderLogick() => $"""
-        <xs:Неформализованный xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-                              Ид="{DocumentId}" Название="{DocName}" Дата="{DocDate:yyyy-MM-dd}">
+        <xs:ПОА xmlns:xs="http://www.w3.org/2001/XMLSchema" Ид="{DocumentId}" ЦелевойИд="{TargetDocumentId}" ЦелевойТип="{TargetDocumentType}">
           <xs:Заголовок>
-            <xs:НазваниеДокумента>{DocName}</xs:НазваниеДокумента>
-            <xs:ДатаДокумента>{DocDate:yyyy-MM-dd}</xs:ДатаДокумента>
+            <xs:ЦелевойДокументИд>{TargetDocumentId}</xs:ЦелевойДокументИд>
+            <xs:ЦелевойДокументТип>{TargetDocumentType}</xs:ЦелевойДокументТип>
+            <xs:Причина>{Reason}</xs:Причина>
             <xs:Отправитель>{Sender}</xs:Отправитель>
             <xs:Получатель>{Receiver}</xs:Получатель>
         """;
@@ -37,13 +42,13 @@ namespace DocumentFlowKafka.Classes.Documnets
           <xs:Содержимое>
             {content}
           </xs:Содержимое>
-        </xs:Неформализованный>
+        </xs:ПОА>
         """;
 
         public override string GenerationHeaderDescription() => $"""
-        <ОписаниеДокумента Тип="Неформализованный" Ид="{DocumentId}">
+        <ОписаниеДокумента Тип="ПОА" Ид="{DocumentId}">
           <Заголовок>
-            <Описание>Неформализованный документ "{DocName}" от {DocDate:dd.MM.yyyy}</Описание>
+            <Описание>Предложение об аннулировании для {TargetDocumentType} № {TargetDocumentId}: {Reason}</Описание>
             <Отправитель>{Sender}</Отправитель>
             <Получатель>{Receiver}</Получатель>
         """;
@@ -57,9 +62,9 @@ namespace DocumentFlowKafka.Classes.Documnets
         """;
 
         public override string GenerationHeaderReceipt() => $"""
-        <Квитанция Тип="Неформализованный" Ид="{DocumentId}">
+        <Квитанция Тип="ПОА" Ид="{DocumentId}">
           <Заголовок>
-            <Информация>Квитанция для неформализованного документа "{DocName}"</Информация>
+            <Информация>Квитанция для ПОА № {DocumentId}</Информация>
             <ДатаФормирования>{DateTime.Now:dd.MM.yyyy HH:mm:ss}</ДатаФормирования>
         """;
 

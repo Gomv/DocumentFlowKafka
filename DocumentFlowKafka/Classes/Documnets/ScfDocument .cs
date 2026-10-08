@@ -2,32 +2,34 @@
 
 namespace DocumentFlowKafka.Classes.Documnets
 {
-    public class NotFormalDocumnet : DocumentsClass
+    /// <summary>
+    /// Счёт-фактура (СЧФ).
+    /// </summary>
+    public class ScfDocument : DocumentsClass
     {
-        public string DocName { get; init; }
-        public DateTime DocDate { get; init; }
+        public string ScfNumber { get; init; }
+        public DateTime ScfDate { get; init; }
 
-        public NotFormalDocumnet(string sender, string receiver, string documentId, string docName, DateTime docDate, string content = "")
+        public ScfDocument(string sender, string receiver, string documentId, string scfNumber, DateTime scfDate, string content = "")
         {
             Sender = sender;
             Receiver = receiver;
             DocumentId = documentId;
-            DocName = docName;
-            DocDate = docDate;
-            DocType = DocumentType.Неформализованный;
-            Type = new Types { Name = "Неформализованный" };
-            Name = "Неформализованный документ";
+            ScfNumber = scfNumber;
+            ScfDate = scfDate;
+            DocType = DocumentType.СЧФ;
+            Type = new Types { Name = "СЧФ" };
+            Name = "Счёт-фактура";
 
             HeaderLogick = GenerationHeaderLogick();
             BodyLogick = GenerationBodyLogick(content);
         }
 
         protected override string GenerationHeaderLogick() => $"""
-        <xs:Неформализованный xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-                              Ид="{DocumentId}" Название="{DocName}" Дата="{DocDate:yyyy-MM-dd}">
+        <xs:СЧФ xmlns:xs="http://www.w3.org/2001/XMLSchema" Ид="{DocumentId}" Номер="{ScfNumber}" Дата="{ScfDate:yyyy-MM-dd}">
           <xs:Заголовок>
-            <xs:НазваниеДокумента>{DocName}</xs:НазваниеДокумента>
-            <xs:ДатаДокумента>{DocDate:yyyy-MM-dd}</xs:ДатаДокумента>
+            <xs:НомерСЧФ>{ScfNumber}</xs:НомерСЧФ>
+            <xs:ДатаСЧФ>{ScfDate:yyyy-MM-dd}</xs:ДатаСЧФ>
             <xs:Отправитель>{Sender}</xs:Отправитель>
             <xs:Получатель>{Receiver}</xs:Получатель>
         """;
@@ -37,13 +39,13 @@ namespace DocumentFlowKafka.Classes.Documnets
           <xs:Содержимое>
             {content}
           </xs:Содержимое>
-        </xs:Неформализованный>
+        </xs:СЧФ>
         """;
 
         public override string GenerationHeaderDescription() => $"""
-        <ОписаниеДокумента Тип="Неформализованный" Ид="{DocumentId}">
+        <ОписаниеДокумента Тип="СЧФ" Ид="{DocumentId}" Номер="{ScfNumber}">
           <Заголовок>
-            <Описание>Неформализованный документ "{DocName}" от {DocDate:dd.MM.yyyy}</Описание>
+            <Описание>Счёт-фактура № {ScfNumber} от {ScfDate:dd.MM.yyyy}</Описание>
             <Отправитель>{Sender}</Отправитель>
             <Получатель>{Receiver}</Получатель>
         """;
@@ -57,9 +59,9 @@ namespace DocumentFlowKafka.Classes.Documnets
         """;
 
         public override string GenerationHeaderReceipt() => $"""
-        <Квитанция Тип="Неформализованный" Ид="{DocumentId}">
+        <Квитанция Тип="СЧФ" Ид="{DocumentId}" Номер="{ScfNumber}">
           <Заголовок>
-            <Информация>Квитанция для неформализованного документа "{DocName}"</Информация>
+            <Информация>Квитанция для счёта-фактуры № {ScfNumber}</Информация>
             <ДатаФормирования>{DateTime.Now:dd.MM.yyyy HH:mm:ss}</ДатаФормирования>
         """;
 
