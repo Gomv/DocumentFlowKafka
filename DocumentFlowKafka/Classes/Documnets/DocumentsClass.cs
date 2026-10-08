@@ -2,6 +2,23 @@
 
 namespace DocumentFlowKafka.Classes.Documnets
 {
+    public enum DocumentFlowStage
+    {
+        НеСоздан,
+        Создан,
+        ПодготовленКОтправке,
+        Отправлен,
+        ПринятОператором,
+        ПереданПолучателю,
+        ПолученПолучателем,
+        ПодтвержденПолучателем,
+        ТребуетУточнения,
+        Аннулирован,
+        Отклонен,
+        Завершен,
+        Ошибка
+    }
+
     /// <summary>
     /// Типы документов согласно XSD-схеме Приложения 1 РОСЭУ.
     /// </summary>
@@ -85,6 +102,18 @@ namespace DocumentFlowKafka.Classes.Documnets
         public Types Type { get; init; }
 
         public DocumentType DocType { get; init; }
+
+        public DocumentFlowStage Stage { get; set; } =
+            DocumentFlowStage.НеСоздан;
+
+        public int StageNumber { get; set; }
+
+        public DateTime CreatedAt { get; init; } =
+            DateTime.UtcNow;
+
+        public DateTime? CompletedAt { get; set; }
+
+        public string? ErrorMessage { get; set; }
 
         // Полный XML логического сообщения — единственное, что доступно снаружи
         public string DocumentLogick { get => XmlDeclaration + HeaderLogick + BodyLogick; init; }
