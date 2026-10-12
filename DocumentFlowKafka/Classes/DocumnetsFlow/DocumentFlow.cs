@@ -77,6 +77,6 @@ namespace DocumentFlowKafka.Classes.DocumnetsFlow
                 docDate: DateTime.UtcNow);
         }
 
-        public virtual List<DocumentsClass> Generate() { return new(); }
+        public abstract List<DocumentsClass> Generate();
     }
 }

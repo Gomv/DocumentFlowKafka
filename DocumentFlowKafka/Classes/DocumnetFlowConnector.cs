@@ -1,61 +1,48 @@
-﻿using DocumentFlowKafka.Model;
+﻿using DocumentFlowKafka.Classes.Documnets;
+using DocumentFlowKafka.Classes.DocumnetsFlow;
+using DocumentFlowKafka.Model;
 using System.Text.Json;
 
 namespace DocumentFlowKafka.Classes
 {
     /// <summary>
-    /// Документооборот с которым работаем
+    /// Класс, в которм мы получаем информацию необходимую 
+    /// для последующей работы. 
     /// </summary>
-    public class DocumnetFlowConnector
+    public sealed class DocumnetFlowConnector
     {
         /// <summary>
         /// Что за документ получили
         /// </summary>
-        public Documents Documnet { get; init; }
+        public Documents Document { get; }
         /// <summary>
-        /// Текущий дкоументооборот с которм работаем
+        /// Документооборот в котором он будет
         /// </summary>
-        public FlowsTypes FlowType { get; init; }
+        public Flows Flow { get; }
         /// <summary>
-        /// Какой документ ожидаем дальше
+        /// Тип документооборота (позже уберу)
         /// </summary>
-        public Types NextDocumnet { get; init; }
+        public DocumentFlowType FlowType { get; }
 
-        private DocumentFlowContext _context;
-        
-        public DocumnetFlowConnector(DocumentFlowContext _context, string documnet)
+        /// <summary>
+        /// Документ с который мы ожидаем реализовать
+        /// </summary>
+        public DocumentsClass Current { get; }
+
+        private DocumnetFlowConnector(
+            Documents document,
+            Flows flow,
+            DocumentFlowType flowType,
+            DocumentsClass? previous,
+            DocumentsClass current,
+            DocumentsClass? next,
+            bool isDuplicate,
+            bool isNewFlow)
         {
-            this._context = _context;
-            Documnet = JsonSerializer.Deserialize<Documents>(documnet);
-            FlowType = detectedType();
-            NextDocumnet = FlowType.DocumnetTypeId[FlowType.DocumnetTypeId.IndexOf(Documnet.Type)];
-        }
-
-        /// <summary>
-        /// Получаем тип документооборота, так сможем понять что отправить дальше или ожидать что то в ответ
-        /// </summary>
-        /// <returns></returns>
-        private FlowsTypes detectedType()
-        {
-            Flows flow = null;
-
-            try // пытаемся получить 
-            {
-                flow = _context.Flows.Single(s => s.Id == Documnet.FlowId.Id);
-            }
-            catch // если документооборот новый, ищем первый документ в ценпочки документооборота через тип
-            {
-                try
-                {
-                    flow = _context.Flows.Single(s => s.FlowsType.DocumnetTypeId.IndexOf(Documnet.Type) == 0);
-                }
-                catch //Если не нашли
-                {
-                    return null;
-                }
-            }
-
-            return flow.FlowsType;
+            Document = document;
+            Flow = flow;
+            FlowType = flowType;
+            Current = current;
         }
     }
 }

@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using DocumentFlowKafka.Classes.DocumnetsFlow;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace DocumentFlowKafka.Model
 {
@@ -14,7 +16,15 @@ namespace DocumentFlowKafka.Model
         [Column("Name")]
         [Required]
         [MaxLength(100)]
-        public string Name { get; set; }
+        public string Name { get; set; } = "ТипДокументОборотаНеНайден";
+
+        [NotMapped]
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public DocumentFlowType? Type
+        {
+            get => Enum.TryParse<DocumentFlowType>(Name, out var value) && Enum.IsDefined(value) ? value : null;
+            set => Name = value?.ToString() ?? "ТипДокументОборотаНеНайден";
+        }
 
         [Column("DocumnetTypeId")]
         [Required]

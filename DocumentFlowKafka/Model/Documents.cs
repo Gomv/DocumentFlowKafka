@@ -41,7 +41,7 @@ namespace DocumentFlowKafka.Model
         [Required]
         [ForeignKey(nameof(Flows))]
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public Flows FlowId { get; set; } = null;
+        public Flows FlowId { get => field ; set; } = null;
 
         [JsonPropertyName("flowId")]
         [NotMapped]
@@ -53,22 +53,14 @@ namespace DocumentFlowKafka.Model
         /// <param name="_context"></param>
         public void FillObject(DocumentFlowContext _context)
         {
-            try
+            if (this.FlowIdString is not null)
             {
                 this.FlowId = _context.Flows.Single(s => s.Id == this.FlowIdString);
             }
-            finally
-            {
 
-            }
-            
-            try
+            if (this.TypeString is not null)
             {
                 this.Type = _context.Type.Single(s => s.Name == this.TypeString);
-            }
-            finally
-            {
-
             }
         }
     }
