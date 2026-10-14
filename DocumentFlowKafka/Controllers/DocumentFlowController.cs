@@ -2,6 +2,7 @@
 using DocumentFlowKafka.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection.Metadata;
 using System.Xml.Linq;
@@ -28,7 +29,7 @@ namespace DocumentFlowKafka.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public IActionResult Get()
+        public async Task<IActionResult> Get(CancellationToken cancellationToken)
         {
             var user = _context.Users.Single(s => s.Id == Convert.ToInt32(User.FindFirst(JwtRegisteredClaimNames.Sub).Value));
 
@@ -39,16 +40,26 @@ namespace DocumentFlowKafka.Controllers
         }
 
         /// <summary>
-        /// Получить документооборот
+        /// Получить документооборот по идентификатору.
         /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        public IActionResult Get([FromQuery] string id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(string id, CancellationToken cancellationToken)
         {
-            return Ok(new
-            {
-                flow = _context.Flows.Single(s => s.Id == id)
-            });
+            var user = await GetCurrentUserAsync(cancellationToken);
+            if (user is null)
+                return Unauthorized();
+
+            var flow = await _context.Flows
+                .AsNoTracking()
+                .FirstOrDefaultAsync(f => f.Id == id, cancellationToken);
+
+            if (flow is null)
+                return NotFound($"Документооборот '{id}' не найден.");
+
+            if (flow.SenderId.Uid != user.Uid && flow.ReceiverId.Uid != user.Uid)
+                return Forbid();
+
+            return Ok(new { flow });
         }
 
         /// <summary>
@@ -57,10 +68,20 @@ namespace DocumentFlowKafka.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPost()]
-        public async Task<IActionResult> Post([FromBody] Flows flow)
+        public async Task<IActionResult> Post([FromBody] Flows flow, CancellationToken cancellationToken)
         {
+            var user = await GetCurrentUserAsync(cancellationToken);
+            if (user is null)
+                return Unauthorized();
+
+            if (flow.SenderId?.Uid != user.Uid)
+                return Forbid("Создавать документооборот может только его отправитель.");
+
+            flow.Id = Guid.NewGuid().ToString();
+            flow.DateCreate = DateTime.UtcNow;
+
             _context.Flows.Add(flow);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             await _kafka.SendAsync("flow-created", new
             {
@@ -68,10 +89,10 @@ namespace DocumentFlowKafka.Controllers
                 Name = flow.Name,
                 FlowId = flow.Id,
                 CreatedAt = flow.DateCreate,
-                UserId = User.FindFirst(JwtRegisteredClaimNames.Sub).Value
+                UserId = user.Id
             });
 
-            return Ok();
+            return CreatedAtAction(nameof(Get), new { id = flow.Id }, new { flow });
         }
 
         /// <summary>
@@ -94,6 +115,56 @@ namespace DocumentFlowKafka.Controllers
             }
 
             return Ok();
+        }
+        /// <summary>
+        /// Удалить документооборот, если в нём нет документов.
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
+        {
+            var user = await GetCurrentUserAsync(cancellationToken);
+            if (user is null)
+                return Unauthorized();
+
+            var flow = (await _context.Documents
+                .Include(f => f.FlowId).FirstAsync(s => s.FlowId.Id == id, cancellationToken)).FlowId;
+
+            if (flow is null)
+                return NotFound($"Документооборот '{id}' не найден.");
+
+            if (flow.SenderId.Uid != user.Uid)
+                return Forbid("Удалить документооборот может только его отправитель.");
+
+            var flowCount = (await _context.Documents
+                .Include(f => f.FlowId).CountAsync(s => s.FlowId.Id == id, cancellationToken));
+
+            if (flowCount != 0)
+                return Conflict("Нельзя удалить документооборот, в котором есть документы.");
+
+            _context.Flows.Remove(flow);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            await _kafka.SendAsync("flow-deleted", new
+            {
+                Id = flow.Id,
+                FlowId = flow.Id,
+                DeletedAt = DateTime.UtcNow,
+                UserId = user.Id
+            });
+
+            return NoContent();
+        }
+
+        private async Task<Users?> GetCurrentUserAsync(CancellationToken cancellationToken)
+        {
+            var userIdValue = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+            if (!int.TryParse(userIdValue, out var userId))
+                return null;
+
+            return await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         }
     }
 }
