@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using DocumentFlowKafka.Model;
+using DocumentFlowKafka.Classes;
 using System.Text.Json;
 
 namespace DocumentFlowKafka.Services
@@ -32,6 +33,7 @@ namespace DocumentFlowKafka.Services
 
             using var consumer = new ConsumerBuilder<Null, string>(config).Build();
             consumer.Subscribe("flow-created");
+            consumer.Subscribe("document-add-requested");
 
             _logger.LogInformation("Kafka Consumer запущен");
 
@@ -43,7 +45,10 @@ namespace DocumentFlowKafka.Services
                     _logger.LogInformation($"Получено сообщение: {result.Message.Value}");
 
                     // Обработка сообщения
-                    await ProcessMessageAsync(result.Message.Value);
+                    await ProcessMessageAsync(
+                        result.Topic,
+                        result.Message.Value,
+                        stoppingToken);
 
                     consumer.Commit(result);
                 }
@@ -65,19 +70,64 @@ namespace DocumentFlowKafka.Services
         /// </summary>
         /// <param name="json"></param>
         /// <returns></returns>
-        private async Task ProcessMessageAsync(string json)
+        private async Task ProcessMessageAsync(string topic, string json, CancellationToken cancellationToken)
         {
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<DocumentFlowContext>();
 
-            /*
-             Через switch ловить топики, но как то странно, что просто тут будет перечень топиков которые кафке нужно отрабатывать
-             */
+            switch (topic)
+            {
+                case "document-add-requested":
+                    //await HandleDocumentAddRequested(json, context, cancellationToken);
+                    break;
 
+                default:
+                    _logger.LogWarning("Неизвестный топик: {Topic}", topic);
+                    break;
+            }
             var data = JsonSerializer.Deserialize<JsonElement>(json);
             _logger.LogInformation($"Обработка документа: {data.GetProperty("Id")}");
 
             await Task.CompletedTask;
         }
+
+        #region Логика обработчика
+
+        ///Осознал, как работает тут идёт обработка других микросервисов, пока API делает, что то свою не нужно перекдиться данными от сюда на верх так как просто целыми данные на верх физически без проблем не передам
+
+
+        /// <summary>
+        /// Класс для десиривлизации
+        /// </summary>
+        //public record AddDocumentCommand(
+        //    string Id,
+        //    string DocumentJson,
+        //    int UserId,
+        //    DateTime RequestedAt);
+
+        //private async Task HandleDocumentAddRequested(
+        //    string json,
+        //    DocumentFlowContext context,
+        //    CancellationToken cancellationToken)
+        //{
+        //    var command = JsonSerializer.Deserialize<AddDocumentCommand>(json);
+
+        //    if (command is null)
+        //    {
+        //        _logger.LogWarning("Не удалось десериализовать команду document-add-requested");
+        //        return;
+        //    }
+
+        //    var connector = await DocumnetFlowConnector.CreateAsync(
+        //        context,
+        //        command.DocumentJson,
+        //        cancellationToken);
+
+        //    _logger.LogInformation(
+        //        "Документ {DocumentId} добавлен в документооборот {FlowId}",
+        //        connector.Document.Id,
+        //        connector.Flow.Id);
+        //}
+        #endregion
     }
 }
