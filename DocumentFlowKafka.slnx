@@ -1,4 +1,8 @@
 <Solution>
+  <Project Path="../DocumentFlowReact/documentflowreact.esproj">
+    <Build />
+    <Deploy />
+  </Project>
   <Project Path="docker-compose.dcproj">
     <Build />
   </Project>
